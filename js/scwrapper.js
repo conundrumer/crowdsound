@@ -54,6 +54,16 @@ define( ['soundcloud'], function (SC) {
             }).filter(function (comment) {
                 return comment.timestamp !== null;
             });
+        },
+
+        play: function(commentCallback) {
+            SC.stream('/tracks/' + this.trackID, {
+                autoPlay: true,
+                volume: 25,
+                ontimedcomments: function (comments) {
+                    commentCallback(comments[0].body);
+                }
+            });
         }
     };
 

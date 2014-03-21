@@ -4,13 +4,18 @@ define( ['scwrapper','polytts'], function (SC, Polytts) {
 		init: function() {
 			SC.init();
 			Polytts.init();
-			Polytts.hello();
-			SC.setTrack('https://soundcloud.com/herobust/sheknowshebad', function() {
-				console.log(SC.comments.length);
-				console.log(SC.comments[0]);
-			});
+			SC.setTrack('https://soundcloud.com/skrillex/coast-is-clear-feat-chance-the', playTrack);
 		}
 	};
+
+	function playTrack() {
+		SC.play(function(comment) {
+            if (typeof(comment) !== 'string') return;
+            if (/http:\/\/|https:\/\//.test(comment)) return; //don't speak urls
+			console.log(comment);
+			Polytts.speak(comment);
+		});
+	}
 
 	return App;
 });
