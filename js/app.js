@@ -1,9 +1,11 @@
-define( [], function () {
+define( ['scwrapper','polytts'], function (SC, Polytts) {
 
-	function App() {
-	}
-
-	App.prototype.init = function() {
+	var App = {
+		init: function() {
+		SC.init();
+		Polytts.init();
+		Polytts.hello();
+		}
 	};
 
 	return App;
