@@ -1,20 +1,47 @@
-define( ['scwrapper','polytts'], function (SC, Polytts) {
+define( ['jquery', 'scwrapper','polytts'], function ($, SC, Polytts) {
 
 	var App = {
 		init: function() {
 			SC.init();
 			Polytts.init();
-			SC.setTrack('https://soundcloud.com/skrillex/coast-is-clear-feat-chance-the', playTrack);
+			$("form").submit(function(event) {
+				event.preventDefault();
+				var url = $("input:first").val();
+				setMessage( "Loading..." );
+				SC.setTrack(url, onLoad, onError);
+			});
+			$("#stopbutton").click(function() {
+				SC.stop();
+			});
 		}
 	};
 
-	function playTrack() {
-		SC.play(function(comment) {
-            if (typeof(comment) !== 'string') return;
-            if (/http:\/\/|https:\/\//.test(comment)) return; //don't speak urls
-			console.log(comment);
-			Polytts.speak(comment);
-		});
+	function setMessage(message) {
+		$( "span" ).text( message ).show();
+	}
+
+	function onLoad() {
+		SC.play(timedComment, onPlay, onStop);
+	}
+
+	function onPlay() {
+		setMessage( "Playing..." );
+	}
+
+	function onStop() {
+		setMessage("");
+	}
+
+	function onError(message) {
+		setMessage( message );
+	}
+
+	function timedComment(comment) {
+        if (typeof(comment) !== 'string') return;
+        if (/http:\/\/|https:\/\//.test(comment)) return; //don't speak urls
+        if (comment === "") return; // don't speak silence
+		console.log(comment);
+		Polytts.speak(comment);
 	}
 
 	return App;

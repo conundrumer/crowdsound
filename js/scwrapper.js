@@ -8,6 +8,7 @@ define( ['soundcloud'], function (SC) {
     MAX_OFFSET = 8000;
 
 	var SCwrapper = {
+        sound: null,
         trackID: null,
         trackUrl: null,
 
@@ -17,19 +18,28 @@ define( ['soundcloud'], function (SC) {
             });
         },
 
-        setTrack: function (trackUrl, callback) {
-            if (this.trackUrl === trackUrl) return;
+        setTrack: function (trackUrl, onload, onerror) {
+            this.stop();
+            onload = onload || function() {};
+            if (this.trackUrl === trackUrl) {
+                onload();
+                return;
+            }
             this.trackUrl = trackUrl;
-            this.comments = []; // reset comments
-            callback = callback || function() {};
+            // this.comments = []; // reset comments
             var self = this;
             SC.get('/resolve', { url: trackUrl },
-                function (trackData) {
+                function (trackData, error) {
+                    if (error) {
+                        onerror(error.message);
+                        return;
+                    }
                     self.trackID = trackData.id;
-                    self.setComments(0, callback);
+                    onload();
+                    // self.setComments(0, onload);
                 });
         },
-
+/*
         setComments: function (offset, callback) {
             var self = this;
             SC.get('/tracks/' + self.trackID + '/comments',
@@ -55,17 +65,33 @@ define( ['soundcloud'], function (SC) {
                 return comment.timestamp !== null;
             });
         },
-
-        play: function(commentCallback) {
+*/
+        play: function(commentCallback, playCallback, stopCallback) {
             SC.stream('/tracks/' + this.trackID, {
                 autoPlay: true,
                 volume: 25,
                 ontimedcomments: function (comments) {
                     commentCallback(comments[0].body);
-                }
+                },
+                onplay: playCallback,
+                onstop: finish(stopCallback),
+                onfinish: finish(stopCallback)
+            }, function (sound) {
+                SCwrapper.sound = sound;
             });
+        },
+        stop: function() {
+            if (this.sound)
+                this.sound.stop();
         }
     };
+
+    function finish(onstop) {
+        return function() {
+            SCwrapper.sound = null;
+            onstop();
+        };
+    }
 
 	return SCwrapper;
 });

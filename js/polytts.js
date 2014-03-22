@@ -25,7 +25,16 @@ define( ['mespeak'], function (meSpeak) {
             meSpeak.speak(text, {
                 variant: randomVariant(),
                 pitch: randomRange(25, 75),
-                speed: Math.round(Math.sqrt(text.length)) + randomRange(140, 160)
+                speed: Math.round(Math.pow(text.length, 0.6)) + randomRange(140, 160),
+                volume: 0.5*Math.pow(text.length, -0.4) + 0.5
+            });
+        },
+        getRawData: function (text) {
+            return meSpeak.speak(text, {
+                variant: randomVariant(),
+                pitch: randomRange(25, 75),
+                speed: Math.round(Math.sqrt(text.length)) + randomRange(140, 160),
+                rawdata: true
             });
         }
     };
