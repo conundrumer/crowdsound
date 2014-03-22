@@ -1,12 +1,16 @@
 requirejs.config({
 	paths: {
 		'jquery': "http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min",
+		'underscore': "http://underscorejs.org/underscore-min",
 		'soundcloud': "http://connect.soundcloud.com/sdk",
 		'mespeak': "lib/mespeak"
 	},
 	shim: {
 		'jquery': {
 			'exports': "$"
+		},
+		'underscore': {
+			'exports': "_"
 		},
 		'soundcloud': {
 			'exports': "SC"

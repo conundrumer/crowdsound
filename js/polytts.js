@@ -21,13 +21,13 @@ define( ['mespeak'], function (meSpeak) {
             meSpeak.loadConfig('js/lib/mespeak_config.json');
             meSpeak.loadVoice('js/lib/voices/en/en.json');
         },
-        speak: function (text) {
+        speak: function (text, onend) {
             meSpeak.speak(text, {
                 variant: randomVariant(),
                 pitch: randomRange(25, 75),
                 speed: Math.round(Math.pow(text.length, 0.6)) + randomRange(140, 160),
                 volume: 0.5*Math.pow(text.length, -0.4) + 0.5
-            });
+            }, onend);
         },
         getRawData: function (text) {
             return meSpeak.speak(text, {
