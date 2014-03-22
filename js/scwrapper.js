@@ -11,6 +11,7 @@ define( ['soundcloud'], function (SC) {
         sound: null,
         trackID: null,
         trackUrl: null,
+        trackName: null,
 
         init: function () {
             SC.initialize({
@@ -21,12 +22,7 @@ define( ['soundcloud'], function (SC) {
         setTrack: function (trackUrl, onload, onerror) {
             this.stop();
             onload = onload || function() {};
-            if (this.trackUrl === trackUrl) {
-                onload();
-                return;
-            }
             this.trackUrl = trackUrl;
-            // this.comments = []; // reset comments
             var self = this;
             SC.get('/resolve', { url: trackUrl },
                 function (trackData, error) {
@@ -35,37 +31,10 @@ define( ['soundcloud'], function (SC) {
                         return;
                     }
                     self.trackID = trackData.id;
+                    self.trackName = trackData.title;
                     onload();
-                    // self.setComments(0, onload);
                 });
         },
-/*
-        setComments: function (offset, callback) {
-            var self = this;
-            SC.get('/tracks/' + self.trackID + '/comments',
-                { limit: PAGE_SIZE, offset: offset},
-                function (comments) {
-                    self.comments = self.comments.concat(self.formatComments(comments));
-                    if (comments.length === PAGE_SIZE && offset < MAX_OFFSET) {
-                        self.setComments(offset + PAGE_SIZE, callback);
-                    } else {
-                        callback();
-                    }
-                });
-        },
-
-        formatComments: function (comments) {
-            return comments.map(function (comment) {
-                return {
-                    body: comment.body,
-                    timestamp: comment.timestamp,
-                    user: comment.user.username
-                };
-            }).filter(function (comment) {
-                return comment.timestamp !== null;
-            });
-        },
-*/
         play: function(commentCallback, playCallback, stopCallback) {
             SC.stream('/tracks/' + this.trackID, {
                 autoPlay: true,
@@ -73,7 +42,7 @@ define( ['soundcloud'], function (SC) {
                 ontimedcomments: function (comments) {
                     commentCallback(comments[0].body);
                 },
-                onplay: playCallback,
+                onplay: function () { playCallback(SCwrapper.trackName); },
                 onstop: finish(stopCallback),
                 onfinish: finish(stopCallback)
             }, function (sound) {

@@ -1,47 +1,61 @@
-define( ['jquery', 'scwrapper','polytts'], function ($, SC, Polytts) {
+define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Polytts) {
 
 	var App = {
 		init: function() {
-			SC.init();
-			Polytts.init();
 			$("form").submit(function(event) {
 				event.preventDefault();
 				var url = $("input:first").val();
-				setMessage( "Loading..." );
-				SC.setTrack(url, onLoad, onError);
+				setStatus( "Loading..." );
+				SC.setTrack(url, function onLoad() {
+					SC.play(timedComment,
+						function onPlay(trackName) { setStatus( "Now playing " + trackName + "..." ); },
+						function onStop() { setStatus(""); }
+						);
+				}, function onError(error) { setStatus( error ); });
 			});
 			$("#stopbutton").click(function() {
 				SC.stop();
 			});
+
+			SC.init();
+			Polytts.init();
+
 		}
 	};
 
-	function setMessage(message) {
-		$( "span" ).text( message ).show();
+	var commentid = 0;
+	var commentTemplate = _.template("<p class='c' id= '<%= id %>' ><%= text %></p>");
+
+	function invalidComment(comment) {
+		return typeof(comment) !== 'string' ||
+		comment === "" || // don't speak silence
+		/http:\/\/|https:\/\/|.com|[^\x00-\x7F]/.test(comment); //don't speak urls or non-ascii
 	}
 
-	function onLoad() {
-		SC.play(timedComment, onPlay, onStop);
-	}
-
-	function onPlay() {
-		setMessage( "Playing..." );
-	}
-
-	function onStop() {
-		setMessage("");
-	}
-
-	function onError(message) {
-		setMessage( message );
+	function formatComment(comment) {
+		return (" " + comment).replace(/!+/g, "!")
+		.replace(/<3+/g, " heart ")
+		.replace(/\s#\w/g, "hashtag ")
+		.replace(/:D|:\)|\(:|C:|c:|:>|<:/g, " happy face ")
+		.replace(/:O|O:|:o|o:/g, " surprised face ")
+		.replace(/;D|;\)|\(;/g, " winky face ")
+		.replace(/D:|\):|:\(|:C|:c|>:|:</g, " sad face ")
+		.toLowerCase();
 	}
 
 	function timedComment(comment) {
-        if (typeof(comment) !== 'string') return;
-        if (/http:\/\/|https:\/\//.test(comment)) return; //don't speak urls
-        if (comment === "") return; // don't speak silence
-		console.log(comment);
-		Polytts.speak(comment);
+        if (invalidComment(comment)) return;
+		var currentid = commentid;
+		commentid++;
+		$("#comments").prepend(commentTemplate({ text: comment, id: currentid }));
+		// console.log(formatComment(comment));
+		Polytts.speak(formatComment(comment), function onCommentEnd() {
+			$("#comments #" + currentid).remove();
+		});
+	}
+
+	function setStatus(message) {
+		$( "#status" ).text( message ).show();
 	}
 
 	return App;

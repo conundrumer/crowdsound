@@ -5,16 +5,35 @@
 
 		<title>SoundCloud CrowdSound</title>
 
+		<style>
+			body {
+				text-align: center;
+			}
+			p {
+				margin:.5em 0 .5em 0
+			} 
+			#status {
+				height:35px;
+				color:red;
+			}
+			#comments {
+				font-family: arial;
+			}
+		</style>
+
 		<script data-main="js/main" src="js/lib/require.js"></script>
 	</head>
 
 	<body>
-		<p>Enter the URL of a SoundCloud track</p>
+		<h1>SOUNDCLOUD CROWDSOUND</h1>
+		<h2>Enter the URL of a SoundCloud track</h2>
 		<form>
-		    <input type="text" size=80 value="https://soundcloud.com/herobust/sheknowshebad">
+		    <input type="text" size=60 value="https://soundcloud.com/herobust/sheknowshebad"></br>
 		    <input type="submit" value="Go!">
 			<input type="button" value="Stop" id="stopbutton">
 		</form>
-		<span></span>
+		<div id="status"></div>
+		<div id="comments"></div>
+
 	</body>
 </html>
