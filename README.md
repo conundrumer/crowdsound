@@ -2,4 +2,4 @@
 
 Input a SoundCloud track and listen to the commentary on top of the music.
 
-Uses the SoundCloud API and [meSpeak.js](http://www.masswerk.at/mespeak/). I'll get around to adding in Backbone.js for a better UI.
+Uses the SoundCloud API, web workers, and [meSpeak.js](http://www.masswerk.at/mespeak/). Maybe I'll get around to using BackboneJS.
