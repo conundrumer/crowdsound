@@ -1,6 +1,6 @@
 requirejs.config({
 	paths: {
-		'jquery': "http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min",
+		'jquery': "http://code.jquery.com/jquery-1.11.0.min",
 		'underscore': "http://underscorejs.org/underscore-min",
 		'soundcloud': "http://connect.soundcloud.com/sdk",
 		'mespeak': "lib/mespeak"

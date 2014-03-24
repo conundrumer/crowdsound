@@ -28,8 +28,8 @@
 		<h1>SOUNDCLOUD CROWDSOUND</h1>
 		<h2>Enter the URL of a SoundCloud track</h2>
 		<form>
-		    <input type="text" size=60 value="https://soundcloud.com/herobust/sheknowshebad"></br>
-		    <input type="submit" value="Go!">
+		    <input type="text" size=60 id="trackurl" ></br>
+		    <input type="submit" value="Go!" id="go" onclick='event.preventDefault();'>
 			<input type="button" value="Stop" id="stopbutton">
 		</form>
 		<div id="status"></div>

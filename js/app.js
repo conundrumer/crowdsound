@@ -2,9 +2,16 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
 
 	var App = {
 		init: function() {
+			if (window.location.hash.length > 0) {
+				$("#trackurl").val(decodeURIComponent(window.location.hash.replace("#","")));
+			} else {
+				$("#trackurl").val("https://soundcloud.com/herobust/sheknowshebad"); // default
+			}
+			$("#go").removeAttr('onclick'); // what is this hack
 			$("form").submit(function(event) {
 				event.preventDefault();
 				var url = $("input:first").val();
+				window.location.hash = encodeURIComponent(url);
 				setStatus( "Loading..." );
 				SC.setTrack(url, function onLoad() {
 					SC.play(timedComment,
