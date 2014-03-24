@@ -38,7 +38,7 @@ define( ['soundcloud'], function (SC) {
         play: function(commentCallback, playCallback, stopCallback) {
             SC.stream('/tracks/' + this.trackID, {
                 autoPlay: true,
-                volume: 25,
+                volume: 20,
                 ontimedcomments: function (comments) {
                     commentCallback(comments[0].body);
                 },
