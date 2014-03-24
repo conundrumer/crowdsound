@@ -18,7 +18,7 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
 			});
 
 			SC.init();
-			Polytts.init();
+			Polytts.init(onCommentEnd);
 
 		}
 	};
@@ -49,9 +49,11 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
 		commentid++;
 		$("#comments").prepend(commentTemplate({ text: comment, id: currentid }));
 		// console.log(formatComment(comment));
-		Polytts.speak(formatComment(comment), function onCommentEnd() {
-			$("#comments #" + currentid).remove();
-		});
+		Polytts.speak(formatComment(comment), currentid);
+	}
+
+	function onCommentEnd(currentid) {
+		$("#comments #" + currentid).remove();
 	}
 
 	function setStatus(message) {
