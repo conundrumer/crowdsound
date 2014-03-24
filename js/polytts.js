@@ -10,7 +10,15 @@ define( function () {
     context, compressor, masterGain, idleVoice;
 
     var id = 0;
-    var worker = new Worker('js/mespeakworker.js');
+    var NUM_WORKERS = 4;
+    var workers = [];
+    var idleWorkers = [];
+    for (var i = 0; i < NUM_WORKERS; i++) {
+        workers[i] = new Worker('js/mespeakworker.js');
+        workers[i].addEventListener('message', onProcessed, false);
+        idleWorkers[i] = i;
+    }
+    var voices, onstartcallback, onendcallback;
 
     function randomRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -38,10 +46,10 @@ define( function () {
         return {x: magnitude*x, y: 0, z: magnitude*z};
     }
 
-    var voices, callback;
     var Polytts = {
-        init: function (onend) {
-            callback = onend;
+        init: function (onstart, onend) {
+            onstartcallback = onstart;
+            onendcallback = onend;
             context = new AudioContext();
             compressor = context.createDynamicsCompressor();
             masterGain = context.createGain();
@@ -51,31 +59,37 @@ define( function () {
             masterGain.connect(context.destination);
             voices = [];
         },
-        speak: function (text, commentid) {
+        speak: function (text, comment, commentid) {
+            var workerid = (idleWorkers.length > 0) ? idleWorkers.pop() : commentid%NUM_WORKERS;
+            var worker = workers[workerid];
             worker.postMessage({
                 'text': text,
                 'config': {
                     'variant': randomVariant(),
                     'pitch': randomRange(25, 75),
-                    'speed': Math.round(Math.pow(text.length, 0.6)) + randomRange(140, 160),
+                    'speed': Math.round(Math.pow(text.length, 0.7)) + randomRange(140, 160),
                     // volume: 0.5*Math.pow(text.length, -0.4) + 0.5,
                     'rawdata': true
                 },
+                'workerid': workerid,
+                'comment': comment,
                 'commentid': commentid});
         }
     };
 
-    worker.addEventListener('message', function (e) {
+    function onProcessed (e) {
         var data = e.data;
+        idleWorkers.push(data.workerid);
+        var commentid = data.commentid;
         var voice = (voices.length > 0) ? voices.pop() : new Voice();
-        voice.speak(data.buffer, function () {
+        voice.speak(data.buffer, data.comment, commentid, function () {
             // console.log("stopping: " + voice.id);
+            onendcallback(commentid);
             voices.push(voice);
-            callback(data.commentid);
         });
-    }, false);
+    }
 
-    Voice.prototype.speak = function (buffer, onend) {
+    Voice.prototype.speak = function (buffer, comment, commentid, onend) {
         var self = this;
         this.source = context.createBufferSource();
         this.source.connect(this.pan);
@@ -85,6 +99,7 @@ define( function () {
             var position = getRandomAngle(duration);
             self.pan.setPosition(position.x, position.y, position.z);
             self.source.buffer = audioData;
+            onstartcallback(comment, commentid);
             self.source.start(0);
         });
     };

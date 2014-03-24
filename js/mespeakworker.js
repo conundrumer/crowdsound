@@ -6,5 +6,9 @@ meSpeak.loadVoice('lib/voices/en/en.json');
 self.addEventListener('message', function(e) {
     var data = e.data;
     var buffer = meSpeak.speak(data.text, data.config, function(){});
-    self.postMessage({buffer: buffer, commentid: data.commentid}, [buffer]);
+    self.postMessage({
+        buffer: buffer,
+        workerid: data.workerid,
+        comment: data.comment,
+        commentid: data.commentid}, [buffer]);
 }, false);
