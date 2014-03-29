@@ -3,6 +3,7 @@ requirejs.config({
 		'jquery': "http://code.jquery.com/jquery-1.11.0.min",
 		'underscore': "http://underscorejs.org/underscore-min",
 		'soundcloud': "http://connect.soundcloud.com/sdk",
+		'sc-widget': "http://w.soundcloud.com/player/api",
 		'mespeak': "lib/mespeak"
 	},
 	shim: {
@@ -13,6 +14,9 @@ requirejs.config({
 			'exports': "_"
 		},
 		'soundcloud': {
+			'exports': "SC"
+		},
+		'sc-widget': {
 			'exports': "SC"
 		},
 		'mespeak': {

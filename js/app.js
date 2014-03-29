@@ -4,31 +4,36 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
 		init: function() {
 			if (window.location.hash.length > 0) {
 				$("#trackurl").val(decodeURIComponent(window.location.hash.replace("#","")));
+
 			} else {
 				$("#trackurl").val("https://soundcloud.com/herobust/sheknowshebad"); // default
 			}
 			$("#go").removeAttr('onclick'); // what is this hack
 			$("form").submit(function(event) {
 				event.preventDefault();
-				var url = $("input:first").val();
-				window.location.hash = encodeURIComponent(url);
-				setStatus( "Loading..." );
-				SC.setTrack(url, function onLoad() {
-					SC.play(timedComment,
-						function onPlay(trackName) { setStatus( "Now playing " + trackName + "..." ); },
-						function onStop() { setStatus(""); }
-						);
-				}, function onError(error) { setStatus( error ); });
+				submitURL();
 			});
 			$("#stopbutton").click(function() {
 				SC.stop();
 			});
 
-			SC.init();
+			SC.init("sc-widget");
 			Polytts.init(onCommentStart, onCommentEnd);
 
+			if (window.location.hash.length > 0) {
+				submitURL();
+			}
 		}
 	};
+
+	function submitURL() {
+		var url = $("input:first").val();
+		window.location.hash = encodeURIComponent(url);
+		setStatus( "Loading..." );
+		SC.setTrack(url, function onLoad() {
+			$("#sc-widget").css('display', 'visible');
+		}, function onError(error) { setStatus( error ); });
+	}
 
 	var commentid = 0;
 	var commentTemplate = _.template("<p class='c' id= '<%= id %>' ><%= text %></p>");
