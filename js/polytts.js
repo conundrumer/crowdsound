@@ -3,13 +3,14 @@
  */
 define( ['voice'],function (Voice) {
 
+    var accents = ["en", "en-us", "en-n", "en-rp", "en-wm", "en-sc"],
     // bias towards male voice because bros are obnoxious
-    var variants = ["f1", "f2", "f3", "f4", "f5",
+    variants = ["f1", "f2", "f3", "f4", "f5",
     "m1", "m2", "m3", "m4", "m5", "m6", "m7",
     "m1", "m2", "m3", "m4", "m5", "m6", "m7"],
     context, compressor, masterGain, idleVoice;
 
-    var NUM_WORKERS = 4,
+    var NUM_WORKERS = accents.length,
     workers = [],
     idleWorkers = [],
     speakQueue = [],
@@ -31,6 +32,10 @@ define( ['voice'],function (Voice) {
     function initWorkers() {
         for (var i = 0; i < NUM_WORKERS; i++) {
             workers[i] = new Worker('js/mespeakworker.js');
+            workers[i].postMessage({
+                init: true,
+                accent: accents[i],
+            });
             workers[i].addEventListener('message', onProcessed, false);
             idleWorkers[i] = i;
         }
@@ -59,14 +64,14 @@ define( ['voice'],function (Voice) {
                 speakQueue.push(commentData);
                 return;
             }
-            var workerid = idleWorkers.pop();
+            var workerid = idleWorkers.shift();
             var worker = workers[workerid];
             commentData.timeToInvoke = commentData.timeToInvoke;
             worker.postMessage({
                 'text': commentData.text,
                 'config': {
                     'variant': randomVariant(),
-                    'pitch': randomRange(25, 75),
+                    'pitch': randomRange(20, 85),
                     'speed': randomSpeed(commentData.text.length),
                     'rawdata': true
                 },
