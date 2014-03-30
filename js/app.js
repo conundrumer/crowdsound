@@ -32,13 +32,16 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
     function submitURL() {
         var url = $("input:first").val();
         window.location.hash = encodeURIComponent(url);
-        setStatus( "Loading..." );
         SC.setTrack(url, function onLoad() {
             $("#sc-widget").css('display', 'visible');
-        }, function onError(error) { setStatus( error ); });
+        }, function onError(error) { setStatus( error );
+        }, function onCommentGet(commentCount) {
+            setStatus( "Loaded " + commentCount + " comments");
+        });
     }
 
-    var commentTemplate = _.template("<p class='c' id= '<%= id %>' ><%= body %></p>");
+    var commentTemplate = _.template(
+        "<div class='c' id= '<%= id %>' style='font-size:<%= size %>px;display:hidden'><%= body %></div>");
 
     function invalidComment(comment) {
         return typeof(comment) !== 'string' ||
@@ -65,12 +68,20 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
         Polytts.speak({text: formatComment(comment.body), comment: comment, delay: delay});
     }
 
+    var animationOptions = { opacity: 'toggle','height': 'toggle','line-height': 'toggle', 'padding-bottom': 'toggle', 'padding-top': 'toggle',
+            'margin-top': 'toggle', 'margin-bottom': 'toggle'};
+
     function onCommentStart(comment) {
+        comment.size = Math.round(40*Math.pow(comment.body.length, -0.3)) + 8;
+        // console.log(comment.size);
         $("#comments").prepend(commentTemplate(comment));
+        $("#comments #" + comment.id).animate(animationOptions, 0).animate(animationOptions, 50);
     }
 
     function onCommentEnd(comment) {
-        $("#comments #" + comment.id).remove();
+        $("#comments #" + comment.id).animate(animationOptions, 50, function () {
+            $("#comments #" + comment.id).remove();
+        });
     }
 
     function setStatus(message) {

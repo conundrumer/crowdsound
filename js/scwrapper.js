@@ -48,7 +48,7 @@ define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, Ti
             });
         },
 
-        setTrack: function (trackUrl, onload, onerror) {
+        setTrack: function (trackUrl, onload, onerror, oncommentget) {
             widget.pause();
             onload = onload || function() {};
             var self = this;
@@ -65,17 +65,21 @@ define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, Ti
                     }
                     self.trackID = trackData.id;
                     widget.load(trackData.uri, loadoptions(onload));
-                    self.loadComments(trackData);
+                    self.loadComments(trackData, oncommentget);
                 });
         },
-        loadComments: function(trackData) {
+        loadComments: function(trackData, oncommentget) {
+            oncommentget(0);
             this.comments = new TimedComments();
             var self = this;
             var commentCount = Math.min(trackData.comment_count, MAX_OFFSET);
+            function onCommentGet (comments) {
+                self.comments.addComments(comments);
+                oncommentget(self.comments.comments.length);
+            }
             for (var offset = 0; offset < commentCount; offset += PAGE_SIZE) {
                 SC.get('/tracks/' + trackData.id + '/comments',
-                    { limit: PAGE_SIZE, offset: offset},
-                    self.comments.addComments.bind(self.comments));
+                    { limit: PAGE_SIZE, offset: offset}, onCommentGet);
             }
         }
     };
