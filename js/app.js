@@ -41,7 +41,7 @@ define( ['jquery', 'underscore', 'scwrapper','polytts'], function ($, _, SC, Pol
     }
 
     var commentTemplate = _.template(
-        "<div class='c' id= '<%= id %>' style='font-size:<%= size %>px;display:hidden'><%= body %></div>");
+        "<div class='c' id= '<%= id %>' style='font-size:<%= size %>px;'><%= body %></div>");
 
     function invalidComment(comment) {
         return typeof(comment) !== 'string' ||
