@@ -1,24 +1,21 @@
 /**
- * Polyphonic Text-to-speech
+ * Polyphonic Text-to-speech. Controls comment queueing, mespeak workers, and voice units
  */
-define( function () {
+define( ['voice'],function (Voice) {
 
+    var accents = ["en", "en-us", "en-n", "en-rp", "en-wm", "en-sc"],
     // bias towards male voice because bros are obnoxious
-    var variants = ["f1", "f2", "f3", "f4", "f5",
+    variants = ["f1", "f2", "f3", "f4", "f5",
     "m1", "m2", "m3", "m4", "m5", "m6", "m7",
     "m1", "m2", "m3", "m4", "m5", "m6", "m7"],
     context, compressor, masterGain, idleVoice;
 
-    var id = 0;
-    var NUM_WORKERS = 4;
-    var workers = [];
-    var idleWorkers = [];
-    for (var i = 0; i < NUM_WORKERS; i++) {
-        workers[i] = new Worker('js/mespeakworker.js');
-        workers[i].addEventListener('message', onProcessed, false);
-        idleWorkers[i] = i;
-    }
-    var voices, onstartcallback, onendcallback;
+    var NUM_WORKERS = accents.length,
+    workers = [],
+    idleWorkers = [],
+    speakQueue = [],
+    voices = [],
+    onstartcallback, onendcallback;
 
     function randomRange(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -28,23 +25,23 @@ define( function () {
         return variants[randomRange(0, variants.length - 1)];
     }
 
-    function Voice () {
-        this.id = id;
-        id++;
-        this.pan = context.createPanner();
-        this.pan.connect(compressor);
-        this.pan.panningModel = 'equalpower';
-        this.pan.rolloffFactor = 0.3;
+    function randomSpeed(length) {
+        return Math.round(Math.pow(length, 0.7)) + randomRange(140, 160);
     }
 
-    function getRandomAngle(magnitude) {
-        var angle = Math.random()*2 - 1; // normalized
-        angle = angle * Math.pow(Math.abs(angle),2); // bias towards center
-        angle = Math.PI * (angle + 1) / 2;
-        var x = Math.cos(angle),
-        z = -1*Math.sin(angle);
-        return {x: magnitude*x, y: 0, z: magnitude*z};
+    function initWorkers() {
+        for (var i = 0; i < NUM_WORKERS; i++) {
+            workers[i] = new Worker('js/mespeakworker.js');
+            workers[i].postMessage({
+                init: true,
+                accent: accents[i],
+            });
+            workers[i].addEventListener('message', onProcessed, false);
+            idleWorkers[i] = i;
+        }
     }
+
+    var active = false;
 
     var Polytts = {
         init: function (onstart, onend) {
@@ -57,53 +54,79 @@ define( function () {
             compressor.threshold = -3; // act as a soft limiter
             compressor.connect(masterGain);
             masterGain.connect(context.destination);
-            voices = [];
+            initWorkers();
         },
-        speak: function (text, comment, commentid) {
-            var workerid = (idleWorkers.length > 0) ? idleWorkers.pop() : commentid%NUM_WORKERS;
+        speak: function (commentData) {
+            var time = commentData.invokationTime || Date.now();
+            if (idleWorkers.length === 0) {
+                // console.log("Delaying: " + commentData.comment.body);
+                commentData.invokationTime = time;
+                speakQueue.push(commentData);
+                return;
+            }
+            var workerid = idleWorkers.shift();
             var worker = workers[workerid];
+            commentData.timeToInvoke = commentData.timeToInvoke;
             worker.postMessage({
-                'text': text,
+                'text': commentData.text,
                 'config': {
                     'variant': randomVariant(),
-                    'pitch': randomRange(25, 75),
-                    'speed': Math.round(Math.pow(text.length, 0.7)) + randomRange(140, 160),
-                    // volume: 0.5*Math.pow(text.length, -0.4) + 0.5,
+                    'pitch': randomRange(20, 85),
+                    'speed': randomSpeed(commentData.text.length),
                     'rawdata': true
                 },
                 'workerid': workerid,
-                'comment': comment,
-                'commentid': commentid});
+                'comment': commentData.comment,
+                'time': time + commentData.delay
+            });
+        },
+        clear: function () {
+            if (speakQueue.length > 0) {
+                console.log("Clearing queue: " + speakQueue.length);
+                speakQueue = [];
+            }
+            voices.forEach(function (voice) {
+                voice.cancel();
+            });
+        },
+        stop: function () {
+            this.clear();
+            voices.forEach(function (voice) {
+                voice.stop();
+            });
+        },
+        setActive: function () {
+            active = true;
+        },
+        setUnactive: function () {
+            active = false;
+            Polytts.clear();
         }
     };
 
     function onProcessed (e) {
         var data = e.data;
+        var comment = data.comment;
+        if (active) {
+            getIdleVoice().speak(data.buffer, comment, data.time);
+        }
+
         idleWorkers.push(data.workerid);
-        var commentid = data.commentid;
-        var voice = (voices.length > 0) ? voices.pop() : new Voice();
-        voice.speak(data.buffer, data.comment, commentid, function () {
-            // console.log("stopping: " + voice.id);
-            onendcallback(commentid);
-            voices.push(voice);
-        });
+        if (speakQueue.length > 0) {
+            Polytts.speak(speakQueue.shift());
+        }
     }
 
-    Voice.prototype.speak = function (buffer, comment, commentid, onend) {
-        var self = this;
-        this.source = context.createBufferSource();
-        this.source.connect(this.pan);
-        context.decodeAudioData(buffer, function (audioData) {
-            var duration = audioData.duration;
-            setTimeout(onend, Math.ceil(duration*1000));
-            var position = getRandomAngle(duration);
-            self.pan.setPosition(position.x, position.y, position.z);
-            self.source.buffer = audioData;
-            onstartcallback(comment, commentid);
-            self.source.start(0);
-        });
-    };
-
+    function getIdleVoice() {
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].active === false) {
+                return voices[i];
+            }
+        }
+        var voice = new Voice(context, compressor, onstartcallback, onendcallback);
+        voices.push(voice);
+        return voice;
+    }
 
     return Polytts;
 });
