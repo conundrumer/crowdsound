@@ -1,49 +1,49 @@
 <!doctype html>
 <html>
-	<head>
-	<meta charset="utf-8">
+    <head>
+    <meta charset="utf-8">
 
-		<title>SoundCloud CrowdSound</title>
+        <title>SoundCloud CrowdSound</title>
 
-		<style>
-			body {
-				text-align: center;
-			}
-			p {
-				margin:.5em 0 .5em 0
-			} 
-			#status {
-				height:35px;
-				color:red;
-			}
-			#comments {
-				font-family: arial;
-			}
-			#trackurl {
-				width: 100%;
-				max-width: 400px;
-			}
-			#sc-widget {
-				width: 100%;
-				max-width: 700px;
-				border: none;
-			}
-		</style>
+        <style>
+            body {
+                text-align: center;
+            }
+            p {
+                margin:.5em 0 .5em 0
+            } 
+            #status {
+                height:35px;
+                color:red;
+            }
+            #comments {
+                font-family: arial;
+            }
+            #trackurl {
+                width: 100%;
+                max-width: 400px;
+            }
+            #sc-widget {
+                width: 100%;
+                max-width: 700px;
+                border: none;
+            }
+        </style>
 
-		<script data-main="js/main" src="js/lib/require.js"></script>
-	</head>
+        <script data-main="js/main" src="js/lib/require.js"></script>
+    </head>
 
-	<body>
-		<h1>SOUNDCLOUD CROWDSOUND</h1>
-		<h2>Enter the URL of a SoundCloud track</h2>
-		<form>
-		    <input type="text" size=40 id="trackurl" ></br>
-		    <input type="submit" value="Load!" id="go" onclick='event.preventDefault();'>
-			<input type="button" value="Clear" id="stopbutton">
-		</form>
-		<iframe id="sc-widget"  style="display: none;" src="https://w.soundcloud.com/player/?url=" scrolling="no"></iframe>
-		<div id="status"></div>
-		<div id="comments"></div>
+    <body>
+        <h1>SOUNDCLOUD CROWDSOUND</h1>
+        <h2>Enter the URL of a SoundCloud track</h2>
+        <form>
+            <input type="text" size=40 id="trackurl" ></br>
+            <input type="submit" value="Load!" id="go" onclick='event.preventDefault();'>
+            <input type="button" value="Clear" id="stopbutton">
+        </form>
+        <iframe id="sc-widget"  style="display: none;" src="https://w.soundcloud.com/player/?url=" scrolling="no"></iframe>
+        <div id="status"></div>
+        <div id="comments"></div>
 
-	</body>
+    </body>
 </html>

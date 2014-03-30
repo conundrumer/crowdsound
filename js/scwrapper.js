@@ -1,38 +1,47 @@
 /**
  * SoundCloud SDK wrapper
  */
-define( ['soundcloud', 'sc-widget'], function (SC, SCwidget) {
+define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, TimedComments) {
     var Widget = SCwidget.Widget;
 
     var MY_CLIENT_ID = 'f4352d8c413a0a2ab164d974da1c9083',
     PAGE_SIZE = 200,
     MAX_OFFSET = 8000,
     TRACK_VOLUME = 20,
+    LOOKAHEAD = 2000, // lookahead: ms
     widget = null;
 
     function loadoptions (onload) {
         return {
-            callback: onload
+            callback: function () {
+                widget.setVolume(TRACK_VOLUME);
+                onload();
+            }
         };
     }
 
-	var SCwrapper = {
-        sound: null,
+    var SCwrapper = {
         trackID: null,
-        trackUrl: null,
-        trackName: null,
 
-        init: function (widgetID) {
+        init: function (widgetID, onComment, onSeek, onPlay, onPause) {
+            this.comments = null;
+            var self = this;
             widget = Widget(widgetID);
+            widget.setVolume(TRACK_VOLUME);
             widget.bind(Widget.Events.PLAY, function() {
                 widget.setVolume(TRACK_VOLUME);
-                console.log("play");
+                onPlay();
+            });
+            widget.bind(Widget.Events.SEEK, function(e) {
+                self.comments.skipped = true;
+            });
+            widget.bind(Widget.Events.PLAY_PROGRESS, function(e) {
+                widget.setVolume(TRACK_VOLUME);
+                self.comments.advance(e.currentPosition, LOOKAHEAD, onComment);
             });
             widget.bind(Widget.Events.PAUSE, function() {
-                console.log("pause");
-            });
-            widget.bind(Widget.Events.SEEK, function() {
-                console.log("seek");
+                self.comments.skipped = true;
+                onPause();
             });
             SC.initialize({
                 client_id: MY_CLIENT_ID
@@ -40,9 +49,8 @@ define( ['soundcloud', 'sc-widget'], function (SC, SCwidget) {
         },
 
         setTrack: function (trackUrl, onload, onerror) {
-            this.stop();
+            widget.pause();
             onload = onload || function() {};
-            this.trackUrl = trackUrl;
             var self = this;
             SC.get('/resolve', { url: trackUrl },
                 function (trackData, error) {
@@ -52,39 +60,25 @@ define( ['soundcloud', 'sc-widget'], function (SC, SCwidget) {
                         onload();
                         return;
                     }
-                    widget.load(trackData.uri, loadoptions(function () {
-                        onload();
-                    }));
+                    if (self.trackID === trackData.id) {
+                        return;
+                    }
                     self.trackID = trackData.id;
-                    self.trackName = trackData.title;
+                    widget.load(trackData.uri, loadoptions(onload));
+                    self.loadComments(trackData);
                 });
         },
-        play: function(commentCallback, playCallback, stopCallback) {
-            SC.stream('/tracks/' + this.trackID, {
-                autoPlay: true,
-                volume: 20,
-                ontimedcomments: function (comments) {
-                    commentCallback(comments[0].body);
-                },
-                onplay: function () { playCallback(SCwrapper.trackName); },
-                onstop: finish(stopCallback),
-                onfinish: finish(stopCallback)
-            }, function (sound) {
-                SCwrapper.sound = sound;
-            });
-        },
-        stop: function() {
-            if (this.sound)
-                this.sound.stop();
+        loadComments: function(trackData) {
+            this.comments = new TimedComments();
+            var self = this;
+            var commentCount = Math.min(trackData.comment_count, MAX_OFFSET);
+            for (var offset = 0; offset < commentCount; offset += PAGE_SIZE) {
+                SC.get('/tracks/' + trackData.id + '/comments',
+                    { limit: PAGE_SIZE, offset: offset},
+                    self.comments.addComments.bind(self.comments));
+            }
         }
     };
 
-    function finish(onstop) {
-        return function() {
-            SCwrapper.sound = null;
-            onstop();
-        };
-    }
-
-	return SCwrapper;
+    return SCwrapper;
 });

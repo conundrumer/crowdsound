@@ -10,5 +10,6 @@ self.addEventListener('message', function(e) {
         buffer: buffer,
         workerid: data.workerid,
         comment: data.comment,
-        commentid: data.commentid}, [buffer]);
+        time: data.time
+    }, [buffer]);
 }, false);
