@@ -7,7 +7,7 @@ define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, Ti
     var MY_CLIENT_ID = 'f4352d8c413a0a2ab164d974da1c9083',
     PAGE_SIZE = 200,
     MAX_OFFSET = 8000,
-    TRACK_VOLUME = 20,
+    TRACK_VOLUME = 25,
     LOOKAHEAD = 2000, // lookahead: ms
     widget = null;
 
