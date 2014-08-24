@@ -7,14 +7,15 @@ define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, Ti
     var MY_CLIENT_ID = 'f4352d8c413a0a2ab164d974da1c9083',
     PAGE_SIZE = 200,
     MAX_OFFSET = 8000,
-    TRACK_VOLUME = 25,
+    TRACK_VOLUME = 0.25, // 25% of initial volume
+    init_volume = 1, // because sc-widget is wrong sometimes, the worst kind of wrong :|
     LOOKAHEAD = 2000, // lookahead: ms
     widget = null;
 
     function loadoptions (onload) {
         return {
             callback: function () {
-                widget.setVolume(TRACK_VOLUME);
+                // widget.setVolume(TRACK_VOLUME);
                 onload();
             }
         };
@@ -27,16 +28,22 @@ define( ['soundcloud', 'sc-widget', 'timedcomments'], function (SC, SCwidget, Ti
             this.comments = null;
             var self = this;
             widget = Widget(widgetID);
-            widget.setVolume(TRACK_VOLUME);
+            // widget.setVolume(TRACK_VOLUME);
             widget.bind(Widget.Events.PLAY, function() {
-                widget.setVolume(TRACK_VOLUME);
-                onPlay();
+                widget.getVolume(function(volume){
+                    if (volume === 1 || volume === 100) {
+                        init_volume = volume;
+                    }
+                    widget.setVolume(init_volume * TRACK_VOLUME);
+                    onPlay();
+                });
             });
             widget.bind(Widget.Events.SEEK, function(e) {
                 self.comments.skipped = true;
+                onSeek();
             });
             widget.bind(Widget.Events.PLAY_PROGRESS, function(e) {
-                widget.setVolume(TRACK_VOLUME);
+                // widget.setVolume(init_volume * TRACK_VOLUME);
                 self.comments.advance(e.currentPosition, LOOKAHEAD, onComment);
             });
             widget.bind(Widget.Events.PAUSE, function() {
