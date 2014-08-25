@@ -4,7 +4,8 @@ requirejs.config({
         'underscore': "http://underscorejs.org/underscore-min",
         'soundcloud': "http://connect.soundcloud.com/sdk",
         'sc-widget': "http://w.soundcloud.com/player/api",
-        'mespeak': "lib/mespeak"
+        'mespeak': "lib/mespeak",
+        'react': "http://fb.me/react-0.11.1.min.js"
     },
     shim: {
         'jquery': {
