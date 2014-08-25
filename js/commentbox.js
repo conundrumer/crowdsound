@@ -60,7 +60,12 @@ define(['react'], function(React) {
             setTimeout(this.maximize, 20);
         },
         remove: function(onRemove) {
-            this.refs.box.getDOMNode().addEventListener('transitionend', onRemove);
+            var box = this.refs.box.getDOMNode();
+            function onEnd() {
+                box.removeEventListener('transitionend', onEnd);
+                onRemove();
+            }
+            box.addEventListener('transitionend', onEnd);
             this.setState({minimized: true});
         },
         render: function() {
