@@ -2,6 +2,8 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
 
     var App = {
         init: function() {
+            CommentBox.render(document.getElementById("comments"));
+
             if (window.location.hash.length > 0) {
                 $("#trackurl").val(decodeURIComponent(window.location.hash.replace("#","")));
             } else {
@@ -14,18 +16,21 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
             });
             $("#stopbutton").click(function() {
                 Polytts.stop();
-                $("#comments").empty();
+                // $("#comments").empty();
+                CommentBox.clear();
             });
             setStatus("Loading SoundCloud...");
             SC.init("sc-widget", timedComment, Polytts.clear,
                 Polytts.setActive, Polytts.setUnactive);
             setStatus("Loading Text to Speech...");
-            Polytts.init(CommentBox.onStart, CommentBox.onCommentEnd);
+            Polytts.init(CommentBox.onStart, CommentBox.onEnd);
             setStatus("");
 
             if (window.location.hash.length > 0) {
                 submitURL();
             }
+
+            // startTestComment();
         }
     };
 
@@ -41,6 +46,13 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
         .toLowerCase();
     }
 
+    function invalidComment(comment) {
+        return typeof(comment) !== 'string' ||
+        comment === "" || // don't speak silence
+        // don't speak URLs or non-ascii or replies (ie "@username: ")
+        /http:\/\/|https:\/\/|.com|[^\x00-\x7F]|^@.+:\s/.test(comment);
+
+    }
     function timedComment(comment, delay) {
         if (invalidComment(comment.body)) return;
         Polytts.speak({text: formatComment(comment.body), comment: comment, delay: delay});
@@ -59,6 +71,54 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
     function setStatus(message) {
         $( "#status" ).text( message ).show();
     }
+
+    /* TEST CODE */
+    var testCommentRunning = false,
+        minDuration = 500,
+        maxDuration = 5000,
+        minDelay = 0,
+        maxDelay = 1000,
+        testID = 0;
+    function getTestComment() {
+        switch (Math.floor(Math.random()*8)){
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                return "hello world "
+            case 4:
+            case 5:
+                return "hello world\nfoobar gierjaiej"
+            case 6:
+                return "asdf\nqwerty\nnoriert ierjg iaerjgoiaerjgoi aejorje ojoigj  rigjaeroigjera iojareoij gaoeirjgaoierjioj "
+            case 7:
+                /* falls through */
+            default:
+                return "asdf\nretqt\nerqg\nwooooooooo 23rop k23rpok23 pok32 rpokboerjboierjb;oi ejro;i aga reigjaeoirjg oiaejrgoiaejr o;aejrgoi aejrgo;iajergiojaero;igj aeo;jga"
+        }
+    }
+    function testComment() {
+        if (!testCommentRunning) return;
+        var duration = (maxDuration - minDuration)*Math.pow(Math.random(), 2) + minDuration;
+        var delay = (maxDelay - minDelay)*Math.random() + minDelay;
+        var comment = {
+            body: getTestComment()+Math.floor(Math.random()*8),
+            id: testID++
+        };
+        CommentBox.onStart(comment);
+        setTimeout(function() {
+            CommentBox.onEnd(comment);
+        }, duration);
+        setTimeout(testComment, delay);
+    }
+    window.startTestComment = function() {
+        testCommentRunning = true;
+        testComment();
+    }
+    window.stopTestComment = function() {
+        testCommentRunning = false;
+    }
+
 
     return App;
 });
