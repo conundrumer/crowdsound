@@ -23,7 +23,8 @@ requirejs.config({
         'mespeak': {
             'exports': "meSpeak"
         }
-    }
+    },
+    waitSeconds: 0
 });
 
 require( ['jquery', 'app'], function ( $, App ) {
