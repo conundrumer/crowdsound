@@ -7,7 +7,7 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
             if (window.location.hash.length > 0) {
                 $("#trackurl").val(decodeURIComponent(window.location.hash.replace("#","")));
             } else {
-                $("#trackurl").val("https://soundcloud.com/protohype/zero-original-mix"); // default
+                $("#trackurl").val("https://soundcloud.com/octbr/am-i"); // default
             }
             $("#go").removeAttr('onclick'); // what is this hack
             $("form").submit(function(event) {
