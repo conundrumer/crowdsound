@@ -5,7 +5,7 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
             CommentBox.render(document.getElementById("comments"));
 
             if (window.location.hash.length > 0) {
-                $("#trackurl").val(decodeURIComponent(window.location.hash.replace("#","")));
+                $("#trackurl").val(window.location.hash.replace("#",""));
             } else {
                 $("#trackurl").val("https://soundcloud.com/octbr/am-i"); // default
             }
@@ -60,7 +60,7 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
 
     function submitURL() {
         var url = $("input:first").val();
-        window.location.hash = encodeURIComponent(url);
+        window.location.hash = url;
         SC.setTrack(url, function onLoad() {
             $("#sc-widget").css('display', 'visible');
         }, function onError(error) { setStatus( error );
