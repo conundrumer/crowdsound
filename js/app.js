@@ -59,6 +59,7 @@ define( ['jquery', 'scwrapper','polytts', 'commentbox'], function ($, SC, Polytt
     }
 
     function submitURL() {
+        setStatus( "Loading SoundCloud track...");
         var url = $("input:first").val();
         window.location.hash = url;
         SC.setTrack(url, function onLoad() {
